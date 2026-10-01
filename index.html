@@ -37,13 +37,14 @@
     .primary:focus-visible,.choice:focus-visible,.linkbtn:focus-visible,.restart:focus-visible,.download:focus-visible{outline:3px solid rgba(11,45,77,.25);outline-offset:3px}
 
     .experience-layout{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(320px,.92fr);gap:24px;align-items:stretch}
-    .visual-stage{position:relative;min-height:580px;border-radius:24px;overflow:hidden;background:linear-gradient(145deg,#11283e,#091827)}
-    #video,#futureCanvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-    #video{transform:scaleX(-1);opacity:0;transition:opacity .35s ease}
+    .visual-stage{position:relative;aspect-ratio:4/5;min-height:0;border-radius:24px;overflow:hidden;background:linear-gradient(145deg,#11283e,#091827)}
+    #video,#futureCanvas{position:absolute;inset:0;width:100%;height:100%}
+    #video{object-fit:cover;transform:scaleX(-1);opacity:0;transition:opacity .35s ease;z-index:0}
     #video.ready{opacity:1}
-    #futureCanvas{display:none}
+    #futureCanvas{display:none;object-fit:contain;background:#eef3f7;z-index:2}
     #futureCanvas.active{display:block}
-    .visual-stage::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(5,18,32,.02) 30%,rgba(5,18,32,.65) 100%);pointer-events:none}
+    .visual-stage::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(5,18,32,.02) 30%,rgba(5,18,32,.65) 100%);pointer-events:none;z-index:1}
+    .visual-stage.card-mode::after{display:none}
     .camera-copy{position:absolute;z-index:3;left:28px;right:28px;bottom:28px;color:white}
     .camera-copy .kicker{font-size:.72rem;font-weight:800;letter-spacing:.17em;text-transform:uppercase;opacity:.86}
     .camera-copy .title{font-size:clamp(2rem,5vw,3.7rem);font-weight:850;letter-spacing:-.04em;line-height:.98;margin-top:8px}
@@ -77,7 +78,7 @@
     @media(max-width:820px){
       .app{padding:12px}.brand{padding:2px 6px}.brand span{display:none}
       .card,.screen{min-height:calc(100vh - 60px)}.screen{padding:20px}
-      .experience-layout{grid-template-columns:1fr}.visual-stage{min-height:520px;aspect-ratio:4/5}
+      .experience-layout{grid-template-columns:1fr}.visual-stage{aspect-ratio:4/5}
       .panel{padding:20px}.camera-copy{left:22px;right:22px;bottom:24px}
     }
     @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition:none!important}}
@@ -173,6 +174,7 @@
       const video = document.getElementById("video");
       const canvas = document.getElementById("futureCanvas");
       const ctx = canvas.getContext("2d");
+      const visualStage = document.querySelector(".visual-stage");
       const cameraCopy = document.getElementById("cameraCopy");
       const errorBox = document.getElementById("cameraError");
       const questionPanel = document.getElementById("questionPanel");
@@ -240,6 +242,7 @@
         errorBox.classList.remove("show");
         cameraCopy.classList.remove("hidden");
         canvas.classList.remove("active");
+        visualStage.classList.remove("card-mode");
         video.classList.remove("ready");
         cameraReady = false;
         lastCardDataUrl = null;
@@ -296,68 +299,94 @@
       }
 
       function renderFutureCard(result) {
-        const W = 1080, H = 1350;
-        canvas.width = W; canvas.height = H;
+        // Keep the bitmap and on-screen frame at the same 4:5 ratio so nothing is cropped.
+        const W = 1000, H = 1250;
+        canvas.width = W;
+        canvas.height = H;
 
-        // Photo or graceful fallback background.
+        // Draw the current camera frame brightly — no full-card dark overlay.
         if (cameraReady && video.videoWidth && video.videoHeight) {
           const vw = video.videoWidth, vh = video.videoHeight;
-          const scale = Math.max(W/vw, H/vh);
-          const sw = W/scale, sh = H/scale;
-          const sx = (vw-sw)/2, sy = (vh-sh)/2;
+          const scale = Math.max(W / vw, H / vh);
+          const sw = W / scale, sh = H / scale;
+          const sx = (vw - sw) / 2, sy = (vh - sh) / 2;
 
           ctx.save();
-          ctx.translate(W,0);
-          ctx.scale(-1,1);
-          ctx.drawImage(video,sx,sy,sw,sh,0,0,W,H);
+          ctx.translate(W, 0);
+          ctx.scale(-1, 1);
+          ctx.drawImage(video, sx, sy, sw, sh, 0, 0, W, H);
           ctx.restore();
         } else {
-          const grad = ctx.createLinearGradient(0,0,W,H);
-          grad.addColorStop(0,"#163b60");
-          grad.addColorStop(1,"#081b2d");
+          const grad = ctx.createLinearGradient(0, 0, W, H);
+          grad.addColorStop(0, "#dbe7ef");
+          grad.addColorStop(1, "#93adc1");
           ctx.fillStyle = grad;
-          ctx.fillRect(0,0,W,H);
+          ctx.fillRect(0, 0, W, H);
         }
 
-        // Editorial overlay.
-        const overlay = ctx.createLinearGradient(0,0,0,H);
-        overlay.addColorStop(0,"rgba(6,22,37,.08)");
-        overlay.addColorStop(.48,"rgba(6,22,37,.20)");
-        overlay.addColorStop(1,"rgba(6,22,37,.90)");
-        ctx.fillStyle = overlay;
-        ctx.fillRect(0,0,W,H);
+        // Very light photo treatment only, preserving the face and image detail.
+        const photoWash = ctx.createLinearGradient(0, 0, 0, H * 0.72);
+        photoWash.addColorStop(0, "rgba(11,45,77,.02)");
+        photoWash.addColorStop(1, "rgba(11,45,77,.18)");
+        ctx.fillStyle = photoWash;
+        ctx.fillRect(0, 0, W, H * 0.70);
 
-        // Top identity pill.
-        roundedRect(ctx,58,58,310,64,32,"rgba(255,255,255,.94)");
+        // Top Xavier identity pill.
+        roundedRect(ctx, 54, 52, 286, 58, 29, "rgba(255,255,255,.96)");
         ctx.fillStyle = "#0b2d4d";
-        ctx.font = "800 28px system-ui";
+        ctx.font = "800 25px system-ui";
         ctx.textBaseline = "middle";
-        ctx.fillText("XAVIER NURSING",86,90);
+        ctx.fillText("XAVIER NURSING", 82, 81);
 
-        // Accent marker.
-        roundedRect(ctx,58,165,14,155,7,result.accent);
+        // Light editorial panel: keeps all copy readable without darkening the photo.
+        const panelX = 42, panelY = 760, panelW = W - 84, panelH = H - panelY - 42;
+        roundedRect(ctx, panelX, panelY, panelW, panelH, 34, "rgba(255,255,255,.96)");
 
-        // Bottom copy.
-        ctx.fillStyle = "rgba(255,255,255,.86)";
-        ctx.font = "800 24px system-ui";
+        // Accent rule.
+        roundedRect(ctx, 74, panelY + 42, 12, 92, 6, result.accent);
+
+        // Label.
+        ctx.fillStyle = "#66788a";
+        ctx.font = "800 21px system-ui";
         ctx.textBaseline = "alphabetic";
-        ctx.fillText("MY FUTURE IN NURSING",58,870);
+        ctx.fillText("MY FUTURE IN NURSING", 112, panelY + 68);
 
+        // Main statement — smaller and safely wrapped inside the panel.
+        ctx.fillStyle = "#102235";
+        ctx.font = "850 48px system-ui";
+        const titleBottom = wrapText(
+          ctx,
+          result.cardTitle,
+          112,
+          panelY + 125,
+          panelW - 160,
+          56,
+          3
+        );
+
+        // Supporting line.
+        ctx.fillStyle = "#43576a";
+        ctx.font = "500 26px system-ui";
+        wrapText(
+          ctx,
+          "Picture the impact you want to make — then build the skills to make it real.",
+          112,
+          titleBottom + 24,
+          panelW - 160,
+          36,
+          2
+        );
+
+        // Future Xavier Nurse badge anchored safely inside the panel.
+        const badgeY = H - 98;
+        roundedRect(ctx, 74, badgeY - 25, 374, 50, 25, "#0b2d4d");
         ctx.fillStyle = "#ffffff";
-        ctx.font = "850 70px system-ui";
-        const nextY = wrapText(ctx,result.cardTitle,58,940,930,78,4);
-
-        ctx.fillStyle = "rgba(255,255,255,.9)";
-        ctx.font = "500 34px system-ui";
-        wrapText(ctx,"Picture the impact you want to make — then build the skills to make it real.",58,nextY+28,890,46,3);
-
-        roundedRect(ctx,58,H-126,430,64,32,"rgba(255,255,255,.94)");
-        ctx.fillStyle = "#0b2d4d";
-        ctx.font = "800 27px system-ui";
+        ctx.font = "800 22px system-ui";
         ctx.textBaseline = "middle";
-        ctx.fillText("FUTURE XAVIER NURSE",88,H-94);
+        ctx.fillText("FUTURE XAVIER NURSE", 102, badgeY);
 
         lastCardDataUrl = canvas.toDataURL("image/png");
+        visualStage.classList.add("card-mode");
         canvas.classList.add("active");
         video.classList.remove("ready");
         cameraCopy.classList.add("hidden");
@@ -398,6 +427,7 @@
         video.srcObject = null;
         video.classList.remove("ready");
         canvas.classList.remove("active");
+        visualStage.classList.remove("card-mode");
         cameraCopy.classList.remove("hidden");
         errorBox.classList.remove("show");
         experience.classList.remove("active");
