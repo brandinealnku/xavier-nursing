@@ -74,6 +74,16 @@
     .linkbtn,.download{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;border-radius:999px;background:var(--xavier-blue);color:white;padding:12px 17px;font-weight:800;border:0}
     .download{background:#fff;color:var(--navy);border:1px solid var(--line)}
     .restart{border:0;background:transparent;color:var(--navy);font-weight:750;padding:10px 6px}
+    .proof-facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:12px}
+    .fact{border:1px solid var(--line);background:#fff;border-radius:14px;padding:11px 12px}
+    .fact strong{display:block;color:var(--xavier-blue);font-size:1rem;margin:0 0 2px}
+    .fact span{display:block;color:#4f6071;font-size:.78rem;line-height:1.3}
+    .student-voice{margin-top:14px;padding:16px 16px 15px;border-radius:16px;background:linear-gradient(180deg,#f4f8ff 0%,#edf4ff 100%);border:1px solid rgba(0,51,160,.14)}
+    .student-voice .voice-label{font-size:.68rem;text-transform:uppercase;letter-spacing:.12em;font-weight:850;color:var(--xavier-blue);margin-bottom:6px}
+    .student-voice blockquote{margin:0;color:#24374a;font-size:.94rem;line-height:1.45;font-weight:650}
+    .student-voice .voice-by{margin-top:7px;color:var(--muted);font-size:.78rem}
+    .cta-row.primary-ctas{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .visitbtn{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;border-radius:999px;background:var(--navy);color:white;padding:12px 17px;font-weight:800;border:0}
     .smallnote{margin-top:14px;font-size:.77rem;color:var(--muted);line-height:1.4}
 
     @media(max-width:980px){
@@ -108,7 +118,9 @@
       .camera-copy{left:18px;right:18px;bottom:20px}
       .camera-copy .sub{font-size:.92rem}
       .cta-row{display:grid;grid-template-columns:1fr;align-items:stretch}
-      .linkbtn,.download,.restart{width:100%;text-align:center}
+      .linkbtn,.visitbtn,.download,.restart{width:100%;text-align:center}
+      .cta-row.primary-ctas{grid-template-columns:1fr}
+      .proof-facts{grid-template-columns:1fr}
       .result-card{padding:16px}
     }
 
@@ -167,7 +179,7 @@
               </div>
 
               <div id="resultPanel" class="result-panel">
-                <p class="eyebrow">Your future-self card</p>
+                <p class="eyebrow">Your future at Xavier</p>
                 <h3 id="resultHeadline"></h3>
 
                 <div class="result-card">
@@ -176,13 +188,34 @@
                 </div>
 
                 <div class="result-card proof">
-                  <div class="proof-label">Why Xavier Nursing</div>
+                  <div class="proof-label">Why Xavier fits this future</div>
                   <div id="proofTitle" class="proof-title"></div>
                   <p id="proofText" style="margin-top:8px"></p>
+
+                  <div class="proof-facts">
+                    <div class="fact">
+                      <strong id="factOneValue"></strong>
+                      <span id="factOneLabel"></span>
+                    </div>
+                    <div class="fact">
+                      <strong id="factTwoValue"></strong>
+                      <span id="factTwoLabel"></span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="student-voice">
+                  <div class="voice-label">Hear from a Xavier nursing student</div>
+                  <blockquote id="studentQuote"></blockquote>
+                  <div id="studentBy" class="voice-by"></div>
+                </div>
+
+                <div class="cta-row primary-ctas">
+                  <a class="visitbtn" href="https://www.xavier.edu/undergraduate-admission/visit/" target="_blank" rel="noopener">See Xavier in person →</a>
+                  <a class="linkbtn" href="https://www.xavier.edu/nursing/" target="_blank" rel="noopener">Explore Xavier Nursing →</a>
                 </div>
 
                 <div class="cta-row">
-                  <a class="linkbtn" href="https://www.xavier.edu/nursing/" target="_blank" rel="noopener">Explore Xavier Nursing →</a>
                   <button id="downloadBtn" class="download" type="button">Save My Card</button>
                   <button id="restartBtn" class="restart" type="button">Start over</button>
                 </div>
@@ -222,8 +255,14 @@
           cardTitle:"I WANT TO BE THERE WHEN PEOPLE NEED ME.",
           title:"Being there when people need you",
           text:"You see nursing in the moments when knowledge, compassion, and human connection matter most.",
-          proofTitle:"A whole-person approach to nursing",
-          proofText:"Xavier emphasizes holistic, ethical care that prepares nurses to understand the person — not only the diagnosis."
+          proofTitle:"Whole-person care is built into the program",
+          proofText:"Xavier's direct-admission BSN uses a holistic, ethical approach and prepares students for both contemporary clinical practice and whole-person care.",
+          factOneValue:"Direct Admission",
+          factOneLabel:"Undergraduate BSN",
+          factTwoValue:"AHNCC",
+          factTwoLabel:"Endorsed holistic nursing program",
+          studentQuote:"The community within our nursing cohort is so positive and encouraging.",
+          studentBy:"Kristin Wright · Xavier Nursing Student"
         },
         community: {
           accent:"#0099CC",
@@ -231,8 +270,14 @@
           cardTitle:"I WANT TO HELP COMMUNITIES THRIVE.",
           title:"Making communities healthier",
           text:"You want your work to strengthen the health and well-being of the communities you care about.",
-          proofTitle:"Care that reaches beyond the bedside",
-          proofText:"Xavier Nursing prepares students to serve diverse people and communities while connecting clinical knowledge with compassionate care."
+          proofTitle:"Clinical learning reaches across Greater Cincinnati",
+          proofText:"Xavier connects nursing students with hospitals and healthcare agencies throughout the region, giving students repeated opportunities to learn in real care settings.",
+          factOneValue:"30+",
+          factOneLabel:"Partner institutions and agencies",
+          factTwoValue:"6–12 hrs",
+          factTwoLabel:"Weekly practicum placements",
+          studentQuote:"These experiences have greatly increased my confidence in myself and the career path I have chosen.",
+          studentBy:"Jenna Reder ('26) · Nursing"
         },
         leadership: {
           accent:"#EDA64F",
@@ -240,8 +285,14 @@
           cardTitle:"I WANT TO LEAD CHANGE IN HEALTHCARE.",
           title:"Leading change in healthcare",
           text:"You see yourself caring for people while also helping teams, systems, and healthcare organizations work better.",
-          proofTitle:"Preparation for a changing healthcare environment",
-          proofText:"Xavier Nursing combines professional preparation, clinical learning, and leadership-minded education for a healthcare world that keeps evolving."
+          proofTitle:"Leadership starts inside a supportive cohort",
+          proofText:"Xavier's community-based BSN is designed to cultivate compassionate, skilled nurses who are prepared to lead in an evolving healthcare environment.",
+          factOneValue:"BSN",
+          factOneLabel:"Direct-admission pathway",
+          factTwoValue:"#6",
+          factTwoLabel:"Undergraduate BSN in Ohio · U.S. News 2026",
+          studentQuote:"My professors have our best interests at heart and use their knowledge and experience to empower us.",
+          studentBy:"Kristin Wright · Xavier Nursing Student"
         },
         technology: {
           accent:"#61ABE8",
@@ -249,8 +300,14 @@
           cardTitle:"I WANT TO DISCOVER WHAT COMES NEXT.",
           title:"Discovering what is next in patient care",
           text:"You are drawn to the places where nursing knowledge, human judgment, and emerging healthcare tools come together.",
-          proofTitle:"Hands-on learning for modern nursing",
-          proofText:"Xavier's nursing education includes clinical and simulation-based learning designed to prepare students for contemporary healthcare practice."
+          proofTitle:"Practice before the stakes are real",
+          proofText:"Xavier's clinical simulation laboratories in the Health United Building use human patient simulators to create realistic scenarios and build practical skills.",
+          factOneValue:"HUB",
+          factOneLabel:"Clinical simulation laboratories",
+          factTwoValue:"Early",
+          factTwoLabel:"Hands-on labs and clinical learning",
+          studentQuote:"I got to work hands on from the start.",
+          studentBy:"Grace Campbell · Xavier Nursing Student"
         }
       };
 
@@ -437,6 +494,12 @@
           document.getElementById("resultText").textContent = r.text;
           document.getElementById("proofTitle").textContent = r.proofTitle;
           document.getElementById("proofText").textContent = r.proofText;
+          document.getElementById("factOneValue").textContent = r.factOneValue;
+          document.getElementById("factOneLabel").textContent = r.factOneLabel;
+          document.getElementById("factTwoValue").textContent = r.factTwoValue;
+          document.getElementById("factTwoLabel").textContent = r.factTwoLabel;
+          document.getElementById("studentQuote").textContent = "“" + r.studentQuote + "”";
+          document.getElementById("studentBy").textContent = r.studentBy;
 
           questionPanel.classList.add("hidden");
           resultPanel.classList.add("active");
