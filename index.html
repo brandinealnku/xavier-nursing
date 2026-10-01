@@ -4,7 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#0b2d4d">
-  <title>What Kind of Nurse Will You Become? | Xavier Nursing</title>\n  <!-- Prototype: replace typographic Xavier identifier with an approved official logo asset before external launch if required by Xavier brand review. -->
+  <title>What Kind of Nurse Will You Become? | Xavier Nursing</title>
+  <!-- Prototype: replace typographic Xavier identifier with an approved official logo asset before external launch if required by Xavier brand review. -->
   <meta name="description" content="A short interactive recruiting experience for prospective Xavier Nursing students.">
   <style>
     :root{
@@ -73,7 +74,9 @@
     .cta-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px;align-items:center}
     .linkbtn,.download{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;border-radius:999px;background:var(--xavier-blue);color:white;padding:12px 17px;font-weight:800;border:0}
     .download{background:#fff;color:var(--navy);border:1px solid var(--line)}
-    .restart{border:0;background:transparent;color:var(--navy);font-weight:750;padding:10px 6px}\n    .sharebtn{display:none}\n    .sharebtn.available{display:inline-flex}
+    .restart{border:0;background:transparent;color:var(--navy);font-weight:750;padding:10px 6px}
+    .sharebtn{display:none}
+    .sharebtn.available{display:inline-flex}
     .proof-facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:12px}
     .fact{border:1px solid var(--line);background:#fff;border-radius:14px;padding:11px 12px}
     .fact strong{display:block;color:var(--xavier-blue);font-size:1rem;margin:0 0 2px}
@@ -247,7 +250,8 @@
 
       let stream = null;
       let cameraReady = false;
-      let lastCardDataUrl = null;\n      let lastCardFilename = "xavier-future-nurse.png";
+      let lastCardDataUrl = null;
+      let lastCardFilename = "xavier-future-nurse.png";
 
       const results = {
         patients: {
@@ -688,6 +692,8 @@
         questionPanel.classList.remove("hidden");
         resultPanel.classList.remove("active");
         lastCardDataUrl = null;
+        lastCardFilename = "xavier-future-nurse.png";
+        document.getElementById("shareBtn")?.classList.remove("available");
         window.scrollTo({ top: 0, behavior: "smooth" });
       });
 
