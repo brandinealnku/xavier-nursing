@@ -1,9 +1,312 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>See Yourself at Xavier Nursing</title><script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script><script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface"></script><style>body{margin:0;font-family:system-ui;background:#eef2f7;color:#172033}.wrap{max-width:900px;margin:auto;padding:24px}.card{background:white;border-radius:24px;padding:28px;box-shadow:0 20px 60px #0001}.screen{display:none}.screen.active{display:block}h1,h2{margin:.2em 0}p{line-height:1.5}.btn,.choice{border:0;border-radius:999px;padding:14px 20px;font-weight:700;cursor:pointer}.btn{background:#243b6b;color:white}.choices{display:grid;grid-template-columns:1fr 1fr;gap:12px}.choice{text-align:left;background:#eef2f8;color:#172033;border:1px solid #dce3ec}.cam{position:relative;aspect-ratio:4/3;background:#111827;border-radius:18px;overflow:hidden;margin:18px 0}video,canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}video{opacity:0}.tag{position:absolute;left:18px;bottom:18px;color:white;background:#0008;padding:10px 14px;border-radius:14px;z-index:3}.muted{color:#667085}.result{background:#eef2f8;padding:18px;border-radius:16px;margin:18px 0}@media(max-width:650px){.choices{grid-template-columns:1fr}.card{padding:20px}}</style></head><body><div class="wrap"><div class="card"><section id="welcome" class="screen active"><p class="muted">Xavier Nursing recruiting prototype</p><h1>See Yourself at Xavier Nursing</h1><p>Your future in healthcare might be closer than you think. Step into the experience and picture the impact you could make.</p><button id="enter" class="btn">Enter the Experience</button></section><section id="camera" class="screen"><h2>Picture yourself here.</h2><div class="cam"><video id="video" autoplay playsinline muted></video><canvas id="overlay"></canvas><div class="tag"><strong>Future Xavier Nurse</strong><br><span>Imagine where your impact could begin.</span></div></div><p id="status" class="muted">Starting camera…</p><button id="continue" class="btn" disabled>Continue</button></section><section id="question" class="screen"><h2>What kind of impact do you want to make?</h2><div class="choices"><button class="choice" data-key="patients">Caring for patients</button><button class="choice" data-key="leadership">Leading healthcare teams</button><button class="choice" data-key="community">Improving community health</button><button class="choice" data-key="technology">Exploring new healthcare technology</button></div></section><section id="result" class="screen"><h2>Your future could start here.</h2><div class="result"><strong id="resultTitle"></strong><p id="resultText"></p></div><button id="restart" class="btn">Try Again</button><p class="muted">Prototype only. Final recruiting copy, branding, CTA, and program links should be validated with Xavier.</p></section></div></div><script>(()=>{'use strict';const S={welcome:document.getElementById('welcome'),camera:document.getElementById('camera'),question:document.getElementById('question'),result:document.getElementById('result')};const video=document.getElementById('video'),canvas=document.getElementById('overlay'),ctx=canvas.getContext('2d'),status=document.getElementById('status'),cont=document.getElementById('continue');let model,ready=false,lastBox=null,lastFace=0,lastRender=0;const show=n=>{Object.values(S).forEach(x=>x.classList.remove('active'));S[n].classList.add('active')};function smooth(a,b,k=.15){if(!a)return b;return{topLeft:[a.topLeft[0]+k*(b.topLeft[0]-a.topLeft[0]),a.topLeft[1]+k*(b.topLeft[1]-a.topLeft[1])],bottomRight:[a.bottomRight[0]+k*(b.bottomRight[0]-a.bottomRight[0]),a.bottomRight[1]+k*(b.bottomRight[1]-a.bottomRight[1])]}}function frame(box){if(!box)return;const [x1,y1]=box.topLeft,[x2,y2]=box.bottomRight,w=x2-x1,h=y2-y1,cx=x1+w/2;ctx.save();
-const frameX=Math.max(18,x1-w*.34),frameY=Math.max(22,y1-h*.42),frameW=Math.min(canvas.width-36,w*1.68),frameH=Math.min(canvas.height-frameY-34,h*2.45),r=Math.max(16,w*.14);
-ctx.fillStyle='rgba(14,29,59,.16)';ctx.strokeStyle='rgba(255,255,255,.92)';ctx.lineWidth=Math.max(2,w*.018);ctx.setLineDash([]);ctx.beginPath();ctx.roundRect(frameX,frameY,frameW,frameH,r);ctx.fill();ctx.stroke();
-const corner=Math.max(18,w*.15),lw=Math.max(4,w*.035);ctx.strokeStyle='rgba(255,255,255,.98)';ctx.lineWidth=lw;ctx.lineCap='round';
-function cornerMark(x,y,dx,dy){ctx.beginPath();ctx.moveTo(x,y+dy*corner);ctx.lineTo(x,y);ctx.lineTo(x+dx*corner,y);ctx.stroke()}
-cornerMark(frameX+10,frameY+10,1,1);cornerMark(frameX+frameW-10,frameY+10,-1,1);cornerMark(frameX+10,frameY+frameH-10,1,-1);cornerMark(frameX+frameW-10,frameY+frameH-10,-1,-1);
-const badgeY=Math.min(canvas.height-48,frameY+frameH-34);ctx.font=`700 ${Math.max(14,w*.095)}px system-ui`;ctx.textAlign='center';ctx.textBaseline='middle';const label='FUTURE XAVIER NURSE',padX=Math.max(14,w*.09),metrics=ctx.measureText(label),badgeW=metrics.width+padX*2,badgeH=Math.max(34,w*.22),badgeX=cx-badgeW/2;
-ctx.fillStyle='rgba(255,255,255,.94)';ctx.beginPath();ctx.roundRect(badgeX,badgeY-badgeH/2,badgeW,badgeH,badgeH/2);ctx.fill();ctx.fillStyle='#243b6b';ctx.fillText(label,cx,badgeY);
-ctx.font=`600 ${Math.max(12,w*.072)}px system-ui`;ctx.fillStyle='rgba(255,255,255,.96)';ctx.shadowColor='rgba(0,0,0,.35)';ctx.shadowBlur=8;ctx.fillText('PICTURE YOUR IMPACT',cx,Math.max(frameY+34,y1-h*.16));ctx.restore()}async function loop(t){if(!model||!ready){requestAnimationFrame(loop);return}if(t-lastRender<70){requestAnimationFrame(loop);return}lastRender=t;const w=canvas.width,h=canvas.height;ctx.save();ctx.clearRect(0,0,w,h);ctx.translate(w,0);ctx.scale(-1,1);ctx.drawImage(video,0,0,w,h);ctx.restore();let p=[];try{p=await model.estimateFaces(video,false)}catch(e){status.textContent='Face tracking encountered a problem.'}let box=null;if(p.length){box=smooth(lastBox,{topLeft:p[0].topLeft,bottomRight:p[0].bottomRight});lastBox=box;lastFace=t;status.textContent="You're in the experience.";cont.disabled=false}else if(lastBox&&t-lastFace<350){box=lastBox}else{lastBox=null;status.textContent='Move into view so the experience can find you.'}if(box){frame({topLeft:[w-box.bottomRight[0],box.topLeft[1]],bottomRight:[w-box.topLeft[0],box.bottomRight[1]]})}requestAnimationFrame(loop)}async function start(){show('camera');try{const stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{width:{ideal:640},height:{ideal:480},facingMode:'user'}});video.srcObject=stream;await new Promise(r=>video.onloadedmetadata=async()=>{await video.play();canvas.width=video.videoWidth||640;canvas.height=video.videoHeight||480;ready=true;r()});try{await tf.setBackend('webgl')}catch{}await tf.ready();model=await blazeface.load();status.textContent='Look at the camera.';requestAnimationFrame(loop)}catch(e){status.textContent='Camera access is required for this prototype.'}}const copy={patients:['Caring for patients','If direct patient care is where you see yourself making a difference, Xavier Nursing could be part of the path you imagine next.'],leadership:['Leading healthcare teams','Healthcare needs people who can care, coordinate, and lead. Imagine how your Xavier Nursing experience could help shape that future.'],community:['Improving community health','Great healthcare reaches beyond the hospital. Imagine building the skills to make an impact across the communities you care about.'],technology:['Exploring new healthcare technology','Healthcare is changing quickly. Imagine combining nursing knowledge with curiosity about the tools shaping what comes next.']};document.getElementById('enter').onclick=start;cont.onclick=()=>show('question');document.querySelectorAll('.choice').forEach(b=>b.onclick=()=>{const v=copy[b.dataset.key];document.getElementById('resultTitle').textContent=v[0];document.getElementById('resultText').textContent=v[1];show('result')});document.getElementById('restart').onclick=()=>show('camera')})();</script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0b2d4d">
+  <title>What Kind of Nurse Will You Become? | Xavier Nursing</title>
+  <meta name="description" content="A short interactive recruiting experience for prospective Xavier Nursing students.">
+  <style>
+    :root{
+      --navy:#0b2d4d;
+      --navy-2:#173f67;
+      --ink:#102235;
+      --muted:#66788a;
+      --cream:#f7f4ee;
+      --mist:#edf3f7;
+      --white:#fff;
+      --line:rgba(11,45,77,.12);
+      --shadow:0 24px 80px rgba(17,42,67,.16);
+      --radius:28px;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink);background:linear-gradient(180deg,#f8fafc 0%,#eef3f6 100%)}
+    body{min-height:100vh}
+    button,a{font:inherit}
+    button{cursor:pointer}
+    .app{min-height:100vh;display:grid;place-items:center;padding:max(18px,env(safe-area-inset-top)) 18px max(24px,env(safe-area-inset-bottom))}
+    .shell{width:min(100%,920px)}
+    .brand{display:flex;justify-content:space-between;align-items:center;gap:16px;margin:0 4px 14px;color:var(--muted);font-size:.86rem}
+    .brand strong{color:var(--navy);letter-spacing:.04em}
+    .card{position:relative;overflow:hidden;background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);min-height:620px}
+    .screen{display:none;min-height:620px;padding:clamp(24px,5vw,54px)}
+    .screen.active{display:flex;flex-direction:column;justify-content:center;animation:fade .34s ease both}
+    @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+    .eyebrow{text-transform:uppercase;letter-spacing:.15em;font-size:.76rem;font-weight:800;color:var(--navy);margin:0 0 12px}
+    h1,h2{margin:0;letter-spacing:-.045em;line-height:1.02}
+    h1{font-size:clamp(3rem,8vw,6.4rem);max-width:850px}
+    h2{font-size:clamp(2.2rem,5.5vw,4.6rem);max-width:820px}
+    .lead{font-size:clamp(1.05rem,2.3vw,1.35rem);line-height:1.55;color:#42576b;max-width:670px;margin:22px 0 30px}
+    .micro{font-size:.82rem;color:var(--muted);margin:12px 0 0}
+    .primary{align-self:flex-start;border:0;border-radius:999px;background:var(--navy);color:white;padding:15px 24px;font-weight:800;box-shadow:0 10px 30px rgba(11,45,77,.2);transition:.15s ease}
+    .primary:hover{transform:translateY(-1px);background:var(--navy-2)}
+    .primary:focus-visible,.choice:focus-visible,.linkbtn:focus-visible{outline:3px solid rgba(11,45,77,.25);outline-offset:3px}
+
+    /* Camera future-self moment */
+    .camera-stage{position:relative;width:100%;aspect-ratio:16/10;min-height:360px;border-radius:24px;overflow:hidden;background:linear-gradient(145deg,#11283e,#091827);margin-top:24px}
+    #video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1);opacity:0;transition:opacity .35s ease}
+    #video.ready{opacity:1}
+    .camera-stage::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(5,18,32,.05) 25%,rgba(5,18,32,.68) 100%);pointer-events:none}
+    .future-frame{position:absolute;inset:18px;border:1px solid rgba(255,255,255,.55);border-radius:20px;z-index:2;pointer-events:none}
+    .future-frame::before,.future-frame::after{content:"";position:absolute;width:54px;height:54px;border-color:#fff}
+    .future-frame::before{left:-1px;top:-1px;border-left:4px solid #fff;border-top:4px solid #fff;border-radius:18px 0 0 0}
+    .future-frame::after{right:-1px;bottom:-1px;border-right:4px solid #fff;border-bottom:4px solid #fff;border-radius:0 0 18px 0}
+    .future-copy{position:absolute;z-index:3;left:28px;right:28px;bottom:28px;color:white}
+    .future-kicker{font-size:.74rem;font-weight:800;letter-spacing:.18em;text-transform:uppercase;opacity:.84}
+    .future-title{font-size:clamp(2rem,6vw,4rem);font-weight:850;letter-spacing:-.04em;line-height:.98;margin-top:8px}
+    .future-sub{margin-top:10px;font-size:clamp(.95rem,2vw,1.15rem);opacity:.92}
+    .camera-error{position:absolute;inset:0;display:none;align-items:center;justify-content:center;text-align:center;padding:34px;color:white;z-index:4;background:linear-gradient(145deg,#153b61,#0b2d4d)}
+    .camera-error.show{display:flex}
+    .progress{height:4px;background:rgba(255,255,255,.22);position:absolute;left:28px;right:28px;bottom:18px;z-index:4;border-radius:99px;overflow:hidden}
+    .progress span{display:block;width:0;height:100%;background:white;border-radius:99px}
+    .progress.run span{animation:fill 2.8s linear forwards}
+    @keyframes fill{to{width:100%}}
+
+    /* Question */
+    .choices{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:30px}
+    .choice{border:1px solid var(--line);background:linear-gradient(180deg,#fff 0%,#f8fbfd 100%);color:var(--ink);border-radius:20px;padding:20px;text-align:left;font-weight:800;font-size:1.03rem;min-height:92px;transition:.15s ease;display:flex;align-items:center;gap:12px}
+    .choice:hover{transform:translateY(-2px);border-color:rgba(11,45,77,.28);box-shadow:0 10px 26px rgba(17,42,67,.08)}
+    .emoji{font-size:1.45rem}
+
+    /* Result */
+    .result-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:18px;margin-top:28px}
+    .result-card{background:var(--mist);border:1px solid var(--line);border-radius:22px;padding:24px}
+    .result-card strong{display:block;color:var(--navy);font-size:1.35rem;margin-bottom:10px}
+    .result-card p{margin:0;color:#43576a;line-height:1.6}
+    .proof{background:var(--cream)}
+    .proof-label{font-size:.72rem;text-transform:uppercase;letter-spacing:.12em;font-weight:800;color:var(--muted);margin-bottom:10px}
+    .proof-title{font-size:1.1rem;font-weight:800;color:var(--ink);line-height:1.35}
+    .cta-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px;align-items:center}
+    .linkbtn{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;border-radius:999px;background:var(--navy);color:white;padding:14px 22px;font-weight:800}
+    .restart{border:0;background:transparent;color:var(--navy);font-weight:750;padding:12px 8px}
+    .smallnote{margin-top:18px;font-size:.8rem;color:var(--muted)}
+
+    @media(max-width:720px){
+      .app{padding:12px}
+      .brand{padding:2px 6px}
+      .brand span{display:none}
+      .card,.screen{min-height:calc(100vh - 60px)}
+      .screen{padding:24px 20px}
+      .camera-stage{aspect-ratio:4/5;min-height:460px}
+      .choices,.result-grid{grid-template-columns:1fr}
+      .choice{min-height:78px}
+      .future-copy{left:22px;right:22px;bottom:30px}
+      .future-frame{inset:12px}
+    }
+
+    @media(prefers-reduced-motion:reduce){
+      *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition:none!important}
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="shell">
+      <div class="brand">
+        <strong>XAVIER NURSING</strong>
+        <span>See what your future in nursing could look like.</span>
+      </div>
+
+      <main class="card" aria-live="polite">
+        <section id="landing" class="screen active">
+          <p class="eyebrow">Your future in nursing</p>
+          <h1>What kind of nurse will you become?</h1>
+          <p class="lead">Nursing is more than a career. It is the impact you choose to make. Take a few seconds to picture where your path could lead.</p>
+          <button id="startBtn" class="primary" type="button">See My Future →</button>
+          <p class="micro">The camera moment stays on your device. Nothing is uploaded or saved.</p>
+        </section>
+
+        <section id="cameraScreen" class="screen">
+          <p class="eyebrow">Picture yourself here</p>
+          <h2>Imagine where your impact could begin.</h2>
+          <div class="camera-stage">
+            <video id="video" autoplay playsinline muted aria-hidden="true"></video>
+            <div class="future-frame"></div>
+            <div class="future-copy">
+              <div class="future-kicker">Future nurse</div>
+              <div class="future-title">Compassion. Skill. Purpose.</div>
+              <div class="future-sub">Your path can start with the kind of impact you want to make.</div>
+            </div>
+            <div id="cameraError" class="camera-error">
+              <div>
+                <strong style="font-size:1.45rem;display:block;margin-bottom:8px;">Your future does not need a camera.</strong>
+                <span>We could not open it, so we will keep going.</span>
+              </div>
+            </div>
+            <div id="progress" class="progress"><span></span></div>
+          </div>
+        </section>
+
+        <section id="question" class="screen">
+          <p class="eyebrow">One question</p>
+          <h2>What pulls you toward nursing?</h2>
+          <p class="lead" style="margin-bottom:0">Choose the answer that feels most like you.</p>
+          <div class="choices">
+            <button class="choice" data-key="patients" type="button"><span class="emoji">❤️</span><span>Being there when people need me</span></button>
+            <button class="choice" data-key="community" type="button"><span class="emoji">🌎</span><span>Making my community healthier</span></button>
+            <button class="choice" data-key="leadership" type="button"><span class="emoji">🧭</span><span>Leading change in healthcare</span></button>
+            <button class="choice" data-key="technology" type="button"><span class="emoji">✨</span><span>Discovering what is next in patient care</span></button>
+          </div>
+        </section>
+
+        <section id="result" class="screen">
+          <p class="eyebrow">Your future at Xavier</p>
+          <h2 id="resultHeadline">You lead with care.</h2>
+          <div class="result-grid">
+            <div class="result-card">
+              <strong id="resultTitle"></strong>
+              <p id="resultText"></p>
+            </div>
+            <div class="result-card proof">
+              <div class="proof-label">Why Xavier Nursing</div>
+              <div id="proofTitle" class="proof-title"></div>
+              <p id="proofText" style="margin-top:10px"></p>
+            </div>
+          </div>
+          <div class="cta-row">
+            <a class="linkbtn" href="https://www.xavier.edu/nursing/" target="_blank" rel="noopener">Explore Xavier Nursing →</a>
+            <button id="restartBtn" class="restart" type="button">Start over</button>
+          </div>
+          <p class="smallnote">This concept uses Xavier's public nursing program information as a recruiting proof-of-concept. Final language and branding should be reviewed with Xavier.</p>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const screens = {
+        landing: document.getElementById("landing"),
+        camera: document.getElementById("cameraScreen"),
+        question: document.getElementById("question"),
+        result: document.getElementById("result")
+      };
+
+      const video = document.getElementById("video");
+      const errorBox = document.getElementById("cameraError");
+      const progress = document.getElementById("progress");
+      let stream = null;
+      let advanceTimer = null;
+
+      const results = {
+        patients: {
+          headline: "You lead with care.",
+          title: "Being there when people need you",
+          text: "You see nursing in the moments when knowledge, compassion, and human connection matter most.",
+          proofTitle: "A whole-person approach to nursing",
+          proofText: "Xavier emphasizes holistic, ethical care that prepares nurses to understand the person — not only the diagnosis."
+        },
+        community: {
+          headline: "You think beyond one patient at a time.",
+          title: "Making communities healthier",
+          text: "You want your work to strengthen the health and well-being of the communities you care about.",
+          proofTitle: "Care that reaches beyond the bedside",
+          proofText: "Xavier Nursing prepares students to serve diverse people and communities while connecting clinical knowledge with compassionate care."
+        },
+        leadership: {
+          headline: "You want to help shape what comes next.",
+          title: "Leading change in healthcare",
+          text: "You see yourself caring for people while also helping teams, systems, and healthcare organizations work better.",
+          proofTitle: "Preparation for a changing healthcare environment",
+          proofText: "Xavier Nursing combines professional preparation, clinical learning, and leadership-minded education for a healthcare world that keeps evolving."
+        },
+        technology: {
+          headline: "You are curious about the future of care.",
+          title: "Discovering what is next in patient care",
+          text: "You are drawn to the places where nursing knowledge, human judgment, and emerging healthcare tools come together.",
+          proofTitle: "Hands-on learning for modern nursing",
+          proofText: "Xavier's nursing education includes clinical and simulation-based learning designed to prepare students for contemporary healthcare practice."
+        }
+      };
+
+      function show(name) {
+        Object.values(screens).forEach(s => s.classList.remove("active"));
+        screens[name].classList.add("active");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      function stopCamera() {
+        if (!stream) return;
+        stream.getTracks().forEach(track => track.stop());
+        stream = null;
+      }
+
+      function scheduleQuestion(delay = 2800) {
+        clearTimeout(advanceTimer);
+        progress.classList.remove("run");
+        void progress.offsetWidth;
+        progress.classList.add("run");
+        advanceTimer = setTimeout(() => {
+          stopCamera();
+          show("question");
+        }, delay);
+      }
+
+      async function startExperience() {
+        show("camera");
+        errorBox.classList.remove("show");
+        video.classList.remove("ready");
+
+        try {
+          if (!navigator.mediaDevices?.getUserMedia) throw new Error("Camera unsupported");
+
+          stream = await navigator.mediaDevices.getUserMedia({
+            audio: false,
+            video: {
+              facingMode: "user",
+              width: { ideal: 960 },
+              height: { ideal: 1200 }
+            }
+          });
+
+          video.srcObject = stream;
+
+          await new Promise((resolve, reject) => {
+            const timeout = setTimeout(() => reject(new Error("Camera timeout")), 3500);
+            video.onloadedmetadata = async () => {
+              clearTimeout(timeout);
+              try {
+                await video.play();
+                resolve();
+              } catch (err) {
+                reject(err);
+              }
+            };
+          });
+
+          video.classList.add("ready");
+          scheduleQuestion(2800);
+        } catch (err) {
+          console.warn("Camera unavailable:", err);
+          errorBox.classList.add("show");
+          scheduleQuestion(1800);
+        }
+      }
+
+      document.getElementById("startBtn").addEventListener("click", startExperience);
+
+      document.querySelectorAll(".choice").forEach(button => {
+        button.addEventListener("click", () => {
+          const r = results[button.dataset.key];
+          document.getElementById("resultHeadline").textContent = r.headline;
+          document.getElementById("resultTitle").textContent = r.title;
+          document.getElementById("resultText").textContent = r.text;
+          document.getElementById("proofTitle").textContent = r.proofTitle;
+          document.getElementById("proofText").textContent = r.proofText;
+          show("result");
+        });
+      });
+
+      document.getElementById("restartBtn").addEventListener("click", () => {
+        clearTimeout(advanceTimer);
+        stopCamera();
+        show("landing");
+      });
+
+      window.addEventListener("pagehide", stopCamera);
+    })();
+  </script>
+</body>
+</html>
