@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#0b2d4d">
   <title>What Kind of Nurse Will You Become? | Xavier Nursing</title>
+  <!-- Prototype: replace typographic Xavier identifier with an approved official logo asset before external launch if required by Xavier brand review. -->
   <meta name="description" content="A short interactive recruiting experience for prospective Xavier Nursing students.">
   <style>
     :root{
@@ -74,6 +75,8 @@
     .linkbtn,.download{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;border-radius:999px;background:var(--xavier-blue);color:white;padding:12px 17px;font-weight:800;border:0}
     .download{background:#fff;color:var(--navy);border:1px solid var(--line)}
     .restart{border:0;background:transparent;color:var(--navy);font-weight:750;padding:10px 6px}
+    .sharebtn{display:none}
+    .sharebtn.available{display:inline-flex}
     .proof-facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:12px}
     .fact{border:1px solid var(--line);background:#fff;border-radius:14px;padding:11px 12px}
     .fact strong{display:block;color:var(--xavier-blue);font-size:1rem;margin:0 0 2px}
@@ -216,8 +219,9 @@
                 </div>
 
                 <div class="cta-row">
-                  <button id="downloadBtn" class="download" type="button">Save My Card</button>
-                  <button id="restartBtn" class="restart" type="button">Start over</button>
+                  <button id="downloadBtn" class="download" type="button">Save My Xavier Nursing Card</button>
+                  <button id="shareBtn" class="download sharebtn" type="button">Share</button>
+                  <button id="restartBtn" class="restart" type="button">Try Another</button>
                 </div>
 
                 <p class="smallnote">Your image is processed only in this browser. Saving the card is optional and downloads it directly to your device.</p>
@@ -247,6 +251,7 @@
       let stream = null;
       let cameraReady = false;
       let lastCardDataUrl = null;
+      let lastCardFilename = "xavier-future-nurse.png";
 
       const results = {
         patients: {
@@ -386,98 +391,237 @@
         context.fill();
       }
 
-      function renderFutureCard(result) {
-        // Keep the bitmap and on-screen frame at the same 4:5 ratio so nothing is cropped.
-        const W = 1000, H = 1250;
+      function drawCoverImage(context, source, x, y, w, h, mirror = false) {
+        const sw = source.videoWidth || source.naturalWidth || source.width;
+        const sh = source.videoHeight || source.naturalHeight || source.height;
+        if (!sw || !sh) return false;
+        const scale = Math.max(w / sw, h / sh);
+        const cropW = w / scale;
+        const cropH = h / scale;
+        const sx = (sw - cropW) / 2;
+        const sy = (sh - cropH) / 2;
+        context.save();
+        if (mirror) {
+          context.translate(x + w, y);
+          context.scale(-1, 1);
+          context.drawImage(source, sx, sy, cropW, cropH, 0, 0, w, h);
+        } else {
+          context.drawImage(source, sx, sy, cropW, cropH, x, y, w, h);
+        }
+        context.restore();
+        return true;
+      }
+
+      function fitHeadline(context, text, maxWidth, maxLines = 3) {
+        let size = 64;
+        while (size >= 46) {
+          context.font = `850 ${size}px system-ui`;
+          const words = text.split(" ");
+          let line = "", lines = [];
+          for (const word of words) {
+            const test = line ? line + " " + word : word;
+            if (context.measureText(test).width > maxWidth && line) {
+              lines.push(line);
+              line = word;
+            } else {
+              line = test;
+            }
+          }
+          if (line) lines.push(line);
+          if (lines.length <= maxLines) return { size, lines };
+          size -= 2;
+        }
+        context.font = "850 46px system-ui";
+        return { size:46, lines:[text] };
+      }
+
+      function drawThemeMotif(context, theme, x, y, accent) {
+        context.save();
+        context.strokeStyle = accent;
+        context.fillStyle = accent;
+        context.lineWidth = 5;
+        context.lineCap = "round";
+        context.lineJoin = "round";
+        context.globalAlpha = .9;
+
+        if (theme === "patients") {
+          context.beginPath();
+          context.moveTo(x, y + 18);
+          context.bezierCurveTo(x - 24, y - 8, x - 55, y + 12, x - 44, y + 42);
+          context.bezierCurveTo(x - 30, y + 72, x, y + 88, x, y + 88);
+          context.bezierCurveTo(x, y + 88, x + 30, y + 72, x + 44, y + 42);
+          context.bezierCurveTo(x + 55, y + 12, x + 24, y - 8, x, y + 18);
+          context.stroke();
+        } else if (theme === "community") {
+          [[0,0],[42,28],[-42,28],[0,64]].forEach(([dx,dy]) => {
+            context.beginPath();
+            context.arc(x + dx, y + dy, 9, 0, Math.PI * 2);
+            context.fill();
+          });
+          [[0,0,42,28],[0,0,-42,28],[42,28,0,64],[-42,28,0,64]].forEach(([x1,y1,x2,y2]) => {
+            context.beginPath();
+            context.moveTo(x + x1, y + y1);
+            context.lineTo(x + x2, y + y2);
+            context.stroke();
+          });
+        } else if (theme === "leadership") {
+          context.beginPath();
+          context.moveTo(x - 48, y + 66);
+          context.lineTo(x - 12, y + 30);
+          context.lineTo(x + 18, y + 48);
+          context.lineTo(x + 54, y + 8);
+          context.stroke();
+          context.beginPath();
+          context.moveTo(x + 32, y + 8);
+          context.lineTo(x + 54, y + 8);
+          context.lineTo(x + 54, y + 30);
+          context.stroke();
+        } else {
+          context.beginPath();
+          context.moveTo(x - 70, y + 42);
+          context.lineTo(x - 46, y + 42);
+          context.lineTo(x - 28, y + 16);
+          context.lineTo(x - 8, y + 68);
+          context.lineTo(x + 12, y + 30);
+          context.lineTo(x + 30, y + 42);
+          context.lineTo(x + 70, y + 42);
+          context.stroke();
+        }
+        context.restore();
+      }
+
+      function renderFutureCard(result, theme) {
+        // Canonical social-share export: 4:5 portrait.
+        const W = 1080, H = 1350;
         canvas.width = W;
         canvas.height = H;
 
-        // Draw the current camera frame brightly — no full-card dark overlay.
-        if (cameraReady && video.videoWidth && video.videoHeight) {
-          const vw = video.videoWidth, vh = video.videoHeight;
-          const scale = Math.max(W / vw, H / vh);
-          const sw = W / scale, sh = H / scale;
-          const sx = (vw - sw) / 2, sy = (vh - sh) / 2;
+        const NAVY = "#0C2340";
+        const BLUE = "#0033A0";
+        const INK = "#102235";
+        const MUTED = "#5B6B7A";
+        const PAPER = "#F7F9FB";
+        const accent = result.accent || BLUE;
 
-          ctx.save();
-          ctx.translate(W, 0);
-          ctx.scale(-1, 1);
-          ctx.drawImage(video, sx, sy, sw, sh, 0, 0, W, H);
-          ctx.restore();
+        const proofByTheme = {
+          patients: "Direct-admission BSN with a holistic approach to nursing.",
+          community: "Hands-on practicum learning prepares students for real care settings.",
+          leadership: "Prepare for an evolving healthcare environment with empathy and expertise.",
+          technology: "Practice realistic scenarios in Xavier's clinical simulation laboratories."
+        };
+
+        // Background
+        ctx.fillStyle = PAPER;
+        ctx.fillRect(0, 0, W, H);
+
+        // 1) Xavier brand band
+        ctx.fillStyle = NAVY;
+        ctx.fillRect(0, 0, W, 170);
+
+        ctx.fillStyle = "#FFFFFF";
+        ctx.textBaseline = "alphabetic";
+        ctx.font = "850 42px system-ui";
+        ctx.fillText("XAVIER UNIVERSITY", 72, 76);
+        ctx.font = "750 25px system-ui";
+        ctx.globalAlpha = .9;
+        ctx.fillText("COLLEGE OF NURSING", 72, 116);
+        ctx.font = "700 22px system-ui";
+        ctx.textAlign = "right";
+        ctx.fillText("ALL FOR ONE", W - 72, 91);
+        ctx.textAlign = "left";
+        ctx.globalAlpha = 1;
+
+        // 2) Hero photo
+        const heroX = 48, heroY = 170, heroW = 984, heroH = 660;
+        ctx.save();
+        ctx.beginPath();
+        ctx.roundRect(heroX, heroY, heroW, heroH, 30);
+        ctx.clip();
+
+        if (cameraReady && video.videoWidth && video.videoHeight) {
+          drawCoverImage(ctx, video, heroX, heroY, heroW, heroH, true);
         } else {
-          const grad = ctx.createLinearGradient(0, 0, W, H);
-          grad.addColorStop(0, "#dbe7ef");
-          grad.addColorStop(1, "#93adc1");
+          const grad = ctx.createLinearGradient(heroX, heroY, heroX + heroW, heroY + heroH);
+          grad.addColorStop(0, "#DCE7EF");
+          grad.addColorStop(1, "#A8BDCC");
           ctx.fillStyle = grad;
-          ctx.fillRect(0, 0, W, H);
+          ctx.fillRect(heroX, heroY, heroW, heroH);
         }
 
-        // Very light photo treatment only, preserving the face and image detail.
-        const photoWash = ctx.createLinearGradient(0, 0, 0, H * 0.72);
-        photoWash.addColorStop(0, "rgba(11,45,77,.02)");
-        photoWash.addColorStop(1, "rgba(11,45,77,.18)");
-        ctx.fillStyle = photoWash;
-        ctx.fillRect(0, 0, W, H * 0.70);
+        const heroShade = ctx.createLinearGradient(0, heroY, 0, heroY + heroH);
+        heroShade.addColorStop(0, "rgba(12,35,64,0)");
+        heroShade.addColorStop(.72, "rgba(12,35,64,.06)");
+        heroShade.addColorStop(1, "rgba(12,35,64,.30)");
+        ctx.fillStyle = heroShade;
+        ctx.fillRect(heroX, heroY, heroW, heroH);
+        ctx.restore();
 
-        // Top Xavier identity pill.
-        roundedRect(ctx, 54, 52, 286, 58, 29, "rgba(255,255,255,.96)");
-        ctx.fillStyle = "#0b2d4d";
-        ctx.font = "800 25px system-ui";
+        // Future Xavier Nurse badge
+        roundedRect(ctx, 78, 214, 340, 62, 31, "rgba(255,255,255,.96)");
+        ctx.fillStyle = NAVY;
+        ctx.font = "850 24px system-ui";
         ctx.textBaseline = "middle";
-        ctx.fillText("XAVIER UNIVERSITY", 82, 81);
+        ctx.fillText("FUTURE XAVIER NURSE", 108, 245);
 
-        // Light editorial panel: keeps all copy readable without darkening the photo.
-        const panelX = 42, panelY = 760, panelW = W - 84, panelH = H - panelY - 42;
-        roundedRect(ctx, panelX, panelY, panelW, panelH, 34, "rgba(255,255,255,.96)");
+        // Theme motif
+        drawThemeMotif(ctx, theme, 934, 690, "#FFFFFF");
 
-        // Accent rule.
-        roundedRect(ctx, 74, panelY + 42, 12, 92, 6, result.accent);
+        // 3) Personalized statement card — overlaps hero by 45px
+        const statementX = 72, statementY = 785, statementW = 936, statementH = 250;
+        roundedRect(ctx, statementX, statementY, statementW, statementH, 28, "rgba(255,255,255,.985)");
 
-        // Label.
-        ctx.fillStyle = "#66788a";
-        ctx.font = "800 21px system-ui";
+        ctx.fillStyle = accent;
+        ctx.font = "850 22px system-ui";
         ctx.textBaseline = "alphabetic";
-        ctx.fillText("MY FUTURE IN NURSING · ALL FOR ONE", 112, panelY + 68);
+        ctx.fillText("MY REASON", 112, 836);
 
-        // Main statement — smaller and safely wrapped inside the panel.
-        ctx.fillStyle = "#102235";
-        ctx.font = "850 48px system-ui";
-        const titleBottom = wrapText(
-          ctx,
-          result.cardTitle,
-          112,
-          panelY + 125,
-          panelW - 160,
-          56,
-          3
-        );
+        const headline = result.cardTitle.replace(/^I WANT TO /, "I want to ").replace(/\.$/, ".");
+        const fitted = fitHeadline(ctx, headline, 815, 3);
+        ctx.fillStyle = INK;
+        ctx.font = `850 ${fitted.size}px system-ui`;
+        let headlineY = 906;
+        const lineHeight = fitted.size + 7;
+        fitted.lines.forEach((line, i) => ctx.fillText(line, 112, headlineY + i * lineHeight));
 
-        // Supporting line.
-        ctx.fillStyle = "#43576a";
-        ctx.font = "500 26px system-ui";
-        wrapText(
-          ctx,
-          "Picture the impact you want to make — then build the skills to make it real.",
-          112,
-          titleBottom + 24,
-          panelW - 160,
-          36,
-          2
-        );
+        // 4) Xavier proof block
+        const proofX = 72, proofY = 1050, proofW = 936, proofH = 150;
+        roundedRect(ctx, proofX, proofY, proofW, proofH, 24, "#EDF3FA");
 
-        // Future Xavier Nurse badge anchored safely inside the panel.
-        const badgeY = H - 98;
-        roundedRect(ctx, 74, badgeY - 25, 374, 50, 25, "#0033A0");
-        ctx.fillStyle = "#ffffff";
-        ctx.font = "800 22px system-ui";
-        ctx.textBaseline = "middle";
-        ctx.fillText("FUTURE XAVIER NURSE", 102, badgeY);
+        ctx.fillStyle = BLUE;
+        ctx.font = "850 21px system-ui";
+        ctx.fillText("WHY XAVIER", 112, 1094);
+
+        ctx.fillStyle = "#34495D";
+        ctx.font = "650 27px system-ui";
+        wrapText(ctx, proofByTheme[theme] || result.proofTitle, 112, 1140, 760, 34, 2);
+
+        // Small motif on proof block
+        drawThemeMotif(ctx, theme, 916, 1102, accent);
+
+        // 5) Footer
+        ctx.fillStyle = NAVY;
+        ctx.fillRect(0, 1220, W, 130);
+        ctx.fillStyle = "#FFFFFF";
+        ctx.font = "800 23px system-ui";
+        ctx.fillText("XAVIER UNIVERSITY · COLLEGE OF NURSING", 72, 1276);
+        ctx.globalAlpha = .86;
+        ctx.font = "650 22px system-ui";
+        ctx.fillText("xavier.edu/nursing", 72, 1316);
+        ctx.textAlign = "right";
+        ctx.fillText("ALL FOR ONE", W - 72, 1297);
+        ctx.textAlign = "left";
+        ctx.globalAlpha = 1;
 
         lastCardDataUrl = canvas.toDataURL("image/png");
+        lastCardFilename = `xavier-future-nurse-${theme}.png`;
+
         visualStage.classList.add("card-mode");
         canvas.classList.add("active");
         video.classList.remove("ready");
         cameraCopy.classList.add("hidden");
+
+        const shareBtn = document.getElementById("shareBtn");
+        if (shareBtn && navigator.share) shareBtn.classList.add("available");
       }
 
       document.getElementById("startBtn").addEventListener("click", startExperience);
@@ -486,7 +630,7 @@
         button.addEventListener("click", () => {
           const r = results[button.dataset.key];
 
-          renderFutureCard(r);
+          renderFutureCard(r, button.dataset.key);
           stopCamera();
 
           document.getElementById("resultHeadline").textContent = r.headline;
@@ -510,10 +654,29 @@
         if (!lastCardDataUrl) return;
         const a = document.createElement("a");
         a.href = lastCardDataUrl;
-        a.download = "my-future-xavier-nurse.png";
+        a.download = lastCardFilename;
         document.body.appendChild(a);
         a.click();
         a.remove();
+      });
+
+      document.getElementById("shareBtn").addEventListener("click", async () => {
+        if (!lastCardDataUrl || !navigator.share) return;
+        try {
+          const response = await fetch(lastCardDataUrl);
+          const blob = await response.blob();
+          const file = new File([blob], lastCardFilename, { type:"image/png" });
+          const payload = {
+            title:"My Future Xavier Nurse Card",
+            text:"Picture your future in nursing at Xavier University.",
+            files:[file]
+          };
+          if (!navigator.canShare || navigator.canShare({ files:[file] })) {
+            await navigator.share(payload);
+          }
+        } catch (err) {
+          if (err?.name !== "AbortError") console.warn("Share unavailable:", err);
+        }
       });
 
       document.getElementById("restartBtn").addEventListener("click", () => {
@@ -529,6 +692,8 @@
         questionPanel.classList.remove("hidden");
         resultPanel.classList.remove("active");
         lastCardDataUrl = null;
+        lastCardFilename = "xavier-future-nurse.png";
+        document.getElementById("shareBtn")?.classList.remove("available");
         window.scrollTo({ top: 0, behavior: "smooth" });
       });
 
