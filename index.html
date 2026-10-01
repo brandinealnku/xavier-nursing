@@ -56,23 +56,116 @@
     .screen.active{display:block}
     #landing{
       min-height:calc(100vh - 88px);
+      border-bottom:1px solid var(--rule);
+      background:#fff;
+    }
+    .landing-grid{
+      min-height:calc(100vh - 88px);
+      display:grid;
+      grid-template-columns:minmax(0,1.25fr) minmax(320px,.75fr);
+    }
+    .landing-copy{
+      padding:clamp(54px,7vw,92px) clamp(34px,6vw,82px);
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      border-right:1px solid var(--rule);
+    }
+    .landing-copy h1{
+      max-width:780px;
+      font-size:clamp(4.4rem,7.2vw,7rem);
+      line-height:.91;
+    }
+    .landing-copy .lead{
+      max-width:690px;
+      margin:30px 0 30px;
+      font-size:clamp(1rem,1.35vw,1.18rem);
+    }
+    .landing-actions{display:flex;flex-direction:column;align-items:flex-start;gap:12px}
+    .landing-mark{
       position:relative;
       overflow:hidden;
-      padding:72px 7vw 64px;
-      border-bottom:1px solid var(--rule);
+      background:var(--xavier-navy);
+      color:#fff;
+      padding:38px 34px 34px;
+      display:grid;
+      grid-template-rows:auto 1fr auto;
+      min-height:100%;
     }
-    #landing::after{
-      content:"+x";
+    .landing-mark::before{
+      content:"";
       position:absolute;
-      right:-.035em;
-      bottom:-.26em;
+      left:0;right:0;top:0;
+      height:6px;
+      background:var(--xavier-cyan);
+    }
+    .mark-top{
+      text-transform:uppercase;
+      letter-spacing:.16em;
+      font-size:.68rem;
+      font-weight:800;
+      opacity:.82;
+      display:flex;
+      justify-content:space-between;
+      gap:18px;
+    }
+    .mark-center{
+      align-self:center;
+      justify-self:center;
+      width:min(78%,360px);
+      aspect-ratio:1;
+      border:1px solid rgba(255,255,255,.42);
+      display:grid;
+      place-items:center;
+      position:relative;
+    }
+    .mark-center::before,
+    .mark-center::after{
+      content:"";
+      position:absolute;
+      background:rgba(255,255,255,.28);
+    }
+    .mark-center::before{width:1px;height:calc(100% + 70px);left:50%;top:-35px}
+    .mark-center::after{height:1px;width:calc(100% + 70px);top:50%;left:-35px}
+    .mark-x{
+      position:relative;
+      z-index:1;
       font-family:var(--serif);
-      font-size:clamp(17rem,42vw,39rem);
+      font-size:clamp(7rem,14vw,11.5rem);
+      line-height:.75;
+      letter-spacing:-.13em;
+      transform:translateX(-.08em);
+    }
+    .mark-bottom{
+      border-top:1px solid rgba(255,255,255,.42);
+      padding-top:18px;
+      display:grid;
+      grid-template-columns:1fr auto;
+      gap:20px;
+      align-items:end;
+    }
+    .mark-bottom strong{
+      display:block;
+      font-family:var(--serif);
+      font-size:clamp(1.6rem,2.5vw,2.5rem);
+      line-height:1;
+      font-weight:600;
+      text-transform:none;
+      letter-spacing:-.025em;
+    }
+    .mark-bottom span{
+      display:block;
+      margin-top:8px;
+      text-transform:uppercase;
+      letter-spacing:.14em;
+      font-size:.65rem;
+      opacity:.75;
+    }
+    .mark-index{
+      font-family:var(--serif);
+      font-size:4.4rem;
       line-height:.8;
-      color:var(--xavier-navy);
-      opacity:.045;
-      letter-spacing:-.12em;
-      pointer-events:none;
+      color:var(--xavier-cyan);
     }
     .eyebrow{
       margin:0 0 20px;
@@ -87,9 +180,9 @@
       max-width:860px;
       font-family:var(--serif);
       font-size:clamp(4rem,8.4vw,8rem);
-      line-height:.88;
+      line-height:.9;
       font-weight:600;
-      letter-spacing:-.055em;
+      letter-spacing:-.05em;
     }
     h2{font-family:var(--serif);font-size:clamp(2.8rem,5vw,5rem);line-height:.95;font-weight:600}
     h3{font-family:var(--serif);font-size:clamp(2rem,3.5vw,3.2rem);line-height:1;font-weight:600}
@@ -321,6 +414,11 @@
       .brand::before{font-size:2.45rem}
       .brand strong{font-size:.72rem}
       .brand span{display:none}
+      .landing-grid{grid-template-columns:minmax(0,1.15fr) minmax(270px,.85fr)}
+      .landing-copy{padding:48px 38px}
+      .landing-copy h1{font-size:clamp(3.7rem,7vw,5.2rem)}
+      .landing-mark{padding:30px 24px 26px}
+      .mark-center{width:min(76%,270px)}
       .experience-layout{
         grid-template-columns:minmax(0,.9fr) minmax(320px,1.1fr);
         min-height:calc(100vh - 76px);
@@ -358,6 +456,16 @@
       .brand::before{font-size:2.15rem}
       .brand strong{font-size:.68rem;line-height:1.2}
       .brand span{display:none}
+      .landing-grid{grid-template-columns:1fr;min-height:auto}
+      .landing-copy{padding:44px 22px 34px;border-right:0}
+      .landing-copy h1{font-size:clamp(3.25rem,15vw,5rem)}
+      .landing-copy .lead{margin:24px 0}
+      .landing-mark{min-height:280px;padding:24px 20px 22px}
+      .mark-top{font-size:.6rem}
+      .mark-center{width:170px;margin:20px auto}
+      .mark-x{font-size:7rem}
+      .mark-bottom strong{font-size:1.55rem}
+      .mark-index{font-size:3.4rem}
       .experience-layout{grid-template-columns:1fr;min-height:auto}
       .visual-stage{
         min-height:0;
@@ -382,7 +490,6 @@
       .purpose-note{display:none}
     }
     @media(max-width:560px){
-      #landing{padding:46px 22px 38px}
       h1{font-size:clamp(3.25rem,17vw,5.3rem)}
       .lead{margin-top:24px}
       .choice{grid-template-columns:42px 1fr 22px}
@@ -405,11 +512,31 @@
 
       <main class="card">
         <section id="landing" class="screen active">
-          <p class="eyebrow">Xavier Nursing / Future Self</p>
-          <h1>What kind of nurse will you become?</h1>
-          <p class="lead">Start with the reason you are drawn to nursing. Xavier prepares nurses to pair clinical judgment with empathy, whole-person care and the confidence to lead.</p>
-          <button id="startBtn" class="primary" type="button">Picture My Future →</button>
-          <p class="micro">Your camera stays on your device. Nothing is uploaded or stored.</p>
+          <div class="landing-grid">
+            <div class="landing-copy">
+              <p class="eyebrow">Xavier Nursing / Future Self</p>
+              <h1>What kind of nurse will you become?</h1>
+              <p class="lead">Start with the reason you are drawn to nursing. Xavier prepares nurses to pair clinical judgment with empathy, whole-person care and the confidence to lead.</p>
+              <div class="landing-actions">
+                <button id="startBtn" class="primary" type="button">Picture My Future →</button>
+                <p class="micro">Your camera stays on your device. Nothing is uploaded or stored.</p>
+              </div>
+            </div>
+            <aside class="landing-mark" aria-hidden="true">
+              <div class="mark-top">
+                <span>All For One</span>
+                <span>College of Nursing</span>
+              </div>
+              <div class="mark-center"><div class="mark-x">+x</div></div>
+              <div class="mark-bottom">
+                <div>
+                  <strong>Future self.</strong>
+                  <span>Your reason · your future</span>
+                </div>
+                <div class="mark-index">01</div>
+              </div>
+            </aside>
+          </div>
         </section>
 
         <section id="experience" class="screen">
